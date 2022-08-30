@@ -26,7 +26,6 @@
 - Spring Boot
 - Spring Cloud(OpenFeign)
 - Lombok
-- Slf4j
 - JUnit 5
 ***
 ## Запуск

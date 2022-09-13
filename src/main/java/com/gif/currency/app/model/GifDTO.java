@@ -1,4 +1,4 @@
-package com.gifcurrencyapp.model;
+package com.gif.currency.app.model;
 
 import lombok.Data;
 
@@ -7,5 +7,5 @@ import java.util.Map;
 @Data
 public class GifDTO {
 
-    Map<String, Object> data;
+    private Map<String, Object> data;
 }

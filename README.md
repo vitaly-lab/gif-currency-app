@@ -1,57 +1,34 @@
 # GIF RECEIVER
-## Техническое задание
-Создать сервис, который обращается к сервису курсов валют, и отдает gif в ответ:       
-если курс по отношению к USD за сегодня стал выше вчерашнего, то отдаем рандомную [отсюда](https://giphy.com/search/rich)   
-если ниже - с тегом broke. Брать gif c endpoint [отсюда](https://giphy.com/search/broke)  
-
-**Ссылки**  
-[REST API курсов валют](https://docs.openexchangerates.org/)   
-[REST API гифок](https://developers.giphy.com/docs/api#quick-start-guide)
-
-**Must Have**   
-Сервис на Spring Boot 2 + Java / Kotlin   
-Запросы приходят на HTTP endpoint (должен быть написан в соответствии с rest conventions), туда передается код валюты
-по отношению с которой сравнивается USD
- - Для взаимодействия с внешними сервисами используется Feign   
- - Все параметры (валюта по отношению к которой смотрится курс, адреса внешних сервисов и т.д.) вынесены в настройки   
- - На сервис написаны тесты (для мока внешних сервисов можно использовать @mockbean или WireMock)   
- - Для сборки должен использоваться Gradle   
- - Результатом выполнения должен быть репо на GitHub с инструкцией по запуску   
-
-**Nice to Have**   
- - Сборка и запуск Docker контейнера с этим сервисом»
+## Description
+Create a service that calls the exchange rate service and returns a gif in response:
+if the rate against USD for today has become higher than yesterday, then we give a random tag,
+if lower - with the broken tag.
 ***
 ## Stack
 - Open JDK 17
 - Spring Boot
 - Spring Cloud(OpenFeign)
 - Lombok
-- Slf4j
 - JUnit 5
 ***
-## Запуск
-- Склонировать репозиторий, выполнив команду:   
-  `git clone https://github.com/vitaly-lab/gif-currency-app`
-- Перейдя в корневую папку проекта собрать проект:    
-  `gradlew build`
-- Собрать докер-образ с произвольным именем, в нашем случае gif-currency-app:    
-  `docker image build -t gif-currency-app .`
-- Запустить контейнер с нашим образом:   
-  `docker run -p 8090:8090 docker.io/library/gif-currency-app`
+## Instruction about setting .key
+- set environment variable GIPHY_API_KEY for giphy service
+  https://developers.giphy.com/dashboard/?
+- set environment variable CURRENCY_API_KEY for giphy service
+  https://openexchangerates.org/account/app-ids
 ***
 ## Endpoints
-- `/api/getgif/*`  
-  Возвращает гифку в зависимости от курса валют   
+- `/api/v1/gif/*`  
+  Returns a gif depending on the exchange rate:   
   **Parameters**   
   test: string (GBP)   
-  **_Пример_**   
-  `http://localhost:8090/api/getgif/GBP`
+  **_Example_**   
+  `http://localhost:8090/api/v1/gif/GBP`
 ------
-- `/api/getcodes`  
-  Возвращает список валют которые можно применять    
-  **_Пример_**   
-  `http://localhost:8090/api/getcodes`
+- `/api/v1/currency/codes`  
+  Returns a list of currencies that can be used:   
+  **_Example_**   
+  `http://localhost:8090/api/v1/currency/codes`
 ***
-## Примечание
-- API, представляющее гифки бесплатно только для базовой валюты USD
-- Список доступных валют можно посмотреть [здесь](https://openexchangerates.org/api/currencies.json)
+## Note
+- API that renders gifs for free for USD base currency only

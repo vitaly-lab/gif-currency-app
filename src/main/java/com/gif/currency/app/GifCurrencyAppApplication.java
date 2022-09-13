@@ -1,4 +1,4 @@
-package com.gifcurrencyapp;
+package com.gif.currency.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,8 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableFeignClients
 public class GifCurrencyAppApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(GifCurrencyAppApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(GifCurrencyAppApplication.class, args);
+    }
 }

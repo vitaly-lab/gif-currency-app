@@ -1,5 +1,5 @@
 package com.gif.currency.app.service;
 
-public interface GifService {
+public interface GifSRetrieveService {
     byte[] resolveGif(String code);
 }

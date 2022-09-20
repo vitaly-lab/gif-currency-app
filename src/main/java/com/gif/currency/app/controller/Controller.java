@@ -1,8 +1,7 @@
 package com.gif.currency.app.controller;
 
 import com.gif.currency.app.exception.NotFoundException;
-import com.gif.currency.app.exception.ValidationException;
-import com.gif.currency.app.service.GifService;
+import com.gif.currency.app.service.GifSRetrieveService;
 import com.gif.currency.app.service.RatesService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.MediaType;
@@ -19,16 +18,16 @@ import java.util.List;
 @AllArgsConstructor
 public class Controller {
     private final RatesService ratesService;
-    private final GifService gifService;
+    private final GifSRetrieveService gifSRetrieveService;
 
     @GetMapping("/currency/codes")
-    public List<String> getCurrencyCodes() throws ValidationException {
+    public List<String> getCurrencyCodes() {
         return ratesService.getCharCodes();
     }
 
     @ExceptionHandler(NotFoundException.class)
     @GetMapping(value = "/gif/{charCode}", produces = MediaType.IMAGE_GIF_VALUE)
-    public byte[] getGif(@PathVariable String charCode) throws ValidationException {
-        return gifService.resolveGif(charCode);
+    public byte[] getGif(@PathVariable String charCode) {
+        return gifSRetrieveService.resolveGif(charCode);
     }
 }

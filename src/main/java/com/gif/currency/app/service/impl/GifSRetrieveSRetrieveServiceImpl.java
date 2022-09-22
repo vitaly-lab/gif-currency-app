@@ -1,7 +1,7 @@
 package com.gif.currency.app.service.impl;
 
 import com.gif.currency.app.client.FeignGiphyClient;
-import com.gif.currency.app.controller.CurrencyValidator;
+import com.gif.currency.app.service.CurrencyValidator;
 import com.gif.currency.app.exception.NotFoundException;
 import com.gif.currency.app.model.GifDTO;
 import com.gif.currency.app.service.GifSRetrieveService;

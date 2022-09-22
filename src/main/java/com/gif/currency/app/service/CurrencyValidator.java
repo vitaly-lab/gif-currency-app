@@ -1,4 +1,4 @@
-package com.gif.currency.app.controller;
+package com.gif.currency.app.service;
 
 import com.gif.currency.app.client.FeignRatesClient;
 import com.gif.currency.app.exception.NotFoundException;

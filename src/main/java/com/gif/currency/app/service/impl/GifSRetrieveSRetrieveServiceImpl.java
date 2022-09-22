@@ -34,17 +34,6 @@ public class GifSRetrieveSRetrieveServiceImpl implements GifSRetrieveService {
         this.validator = validator;
     }
 
-    public String changeGifTag(String currencyCode) {
-        int gifKey = ratesService.getKey(currencyCode);
-
-        return switch (gifKey) {
-            case 1 -> increase;
-            case -1 -> decrease;
-            case 0 -> withoutChanges;
-            default -> throw new NotFoundException("Unexpected value: " + gifKey);
-        };
-    }
-
     public byte[] resolveGif(String currencyCode) {
         String code = validator.validate(currencyCode);
         GifDTO result = getRandomGif(code);
@@ -56,6 +45,17 @@ public class GifSRetrieveSRetrieveServiceImpl implements GifSRetrieveService {
     private GifDTO getRandomGif(String currencyCode) {
 
         return feignGiphyClient.getRandomGif(apiKey, changeGifTag(currencyCode)).getBody();
+    }
+
+    private String changeGifTag(String currencyCode) {
+        int gifKey = ratesService.getKey(currencyCode);
+
+        return switch (gifKey) {
+            case 1 -> increase;
+            case -1 -> decrease;
+            case 0 -> withoutChanges;
+            default -> throw new NotFoundException("Unexpected value: " + gifKey);
+        };
     }
 
     private String getUrl(String url) {

@@ -3,6 +3,7 @@ package com.gif.currency.app.service.impl;
 import com.gif.currency.app.client.FeignRatesClient;
 import com.gif.currency.app.model.ExchangeRates;
 import com.gif.currency.app.service.RatesService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,24 +14,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RatesServiceImpl implements RatesService {
     private final FeignRatesClient feignRatesClient;
+
     @Value("${openexchangerates.app.id}")
     private String appId;
     @Value("${openexchangerates.base}")
     private String base;
 
-    private RatesServiceImpl(FeignRatesClient feignRatesClient) {
-        this.feignRatesClient = feignRatesClient;
-    }
-
     @Override
     public List<String> getCharCodes() {
-        Set<String> currencies = feignRatesClient.getLatestRates(appId).getRates().keySet();
 
-        return new ArrayList<>(currencies);
+        return feignRatesClient.getLatestRates(appId).getRates().keySet()
+                .stream().toList();
     }
 
     public int getKey(String currencyCode) {

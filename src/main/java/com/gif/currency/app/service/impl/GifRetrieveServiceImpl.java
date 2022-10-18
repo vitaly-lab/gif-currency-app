@@ -1,7 +1,6 @@
 package com.gif.currency.app.service.impl;
 
 import com.gif.currency.app.client.FeignGiphyClient;
-import com.gif.currency.app.service.CurrencyValidator;
 import com.gif.currency.app.exception.NotFoundException;
 import com.gif.currency.app.model.GifDTO;
 import com.gif.currency.app.service.GifSRetrieveService;
@@ -13,11 +12,12 @@ import java.net.URI;
 import java.util.Objects;
 
 @Service
-public class GifSRetrieveSRetrieveServiceImpl implements GifSRetrieveService {
+public class GifRetrieveServiceImpl implements GifSRetrieveService {
     private final FeignGiphyClient feignGiphyClient;
     private final String apiKey;
     private final RatesService ratesService;
     private final CurrencyValidator validator;
+
     @Value("${giphy.rich}")
     private String increase;
     @Value("${giphy.broke}")
@@ -25,9 +25,9 @@ public class GifSRetrieveSRetrieveServiceImpl implements GifSRetrieveService {
     @Value("${giphy.zero}")
     private String withoutChanges;
 
-    public GifSRetrieveSRetrieveServiceImpl(FeignGiphyClient feignGiphyClient,
-                                            @Value("${giphy.api.key}") String apiKey,
-                                            RatesService ratesService, CurrencyValidator validator) {
+    public GifRetrieveServiceImpl(FeignGiphyClient feignGiphyClient,
+                                  @Value("${giphy.api.key}") String apiKey,
+                                  RatesService ratesService, CurrencyValidator validator) {
         this.feignGiphyClient = feignGiphyClient;
         this.apiKey = apiKey;
         this.ratesService = ratesService;
@@ -35,8 +35,8 @@ public class GifSRetrieveSRetrieveServiceImpl implements GifSRetrieveService {
     }
 
     public byte[] resolveGif(String currencyCode) {
-        String code = validator.validate(currencyCode);
-        GifDTO result = getRandomGif(code);
+        validator.validate(currencyCode);
+        GifDTO result = getRandomGif(currencyCode);
         String url = String.valueOf(Objects.requireNonNull(result.getData().get("images")));
 
         return feignGiphyClient.getGifByUrl(URI.create(getUrl(url))).getBody();

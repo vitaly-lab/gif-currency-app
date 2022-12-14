@@ -2,56 +2,70 @@ package com.gif.currency.app.service.impl;
 
 import com.gif.currency.app.client.FeignRatesClient;
 import com.gif.currency.app.model.ExchangeRates;
+import com.gif.currency.app.model.RateStatus;
 import com.gif.currency.app.service.RatesService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static com.gif.currency.app.model.RateStatus.DECREASE;
+import static com.gif.currency.app.model.RateStatus.INCREASE;
+import static com.gif.currency.app.model.RateStatus.WITHOUT_CHANGES;
 
 @Service
-@RequiredArgsConstructor
 public class RatesServiceImpl implements RatesService {
+
     private final FeignRatesClient feignRatesClient;
 
     @Value("${openexchangerates.app.id}")
     private String appId;
     @Value("${openexchangerates.base}")
-    private String base;
+    private String baseCurrency;
 
-    @Override
-    public List<String> getCharCodes() {
-
-        return feignRatesClient.getLatestRates(appId).getRates().keySet()
-                .stream().toList();
+    public RatesServiceImpl(FeignRatesClient feignRatesClient,
+                            @Value("${openexchangerates.app.id}") String appId,
+                            @Value("${openexchangerates.base}") String baseCurrency) {
+        this.feignRatesClient = feignRatesClient;
+        this.appId = appId;
+        this.baseCurrency = baseCurrency;
     }
 
-    public int getKey(String currencyCode) {
+    @Override
+    public Set<String> getSupportedCurrencyCodes() {
+        return new HashSet<>(feignRatesClient.getLatestRates(appId, baseCurrency).getRates().keySet());
+    }
 
-        ExchangeRates prev = feignRatesClient.getHistoricalRates(LocalDate.now().minusDays(1), appId);
-        ExchangeRates current = feignRatesClient.getLatestRates(appId);
+    @Override
+    public RateStatus calculateRateStatus(String currencyCode) {
+        ExchangeRates prev = feignRatesClient.getHistoricalRates(LocalDate.now().minusDays(1), appId, baseCurrency);
+        ExchangeRates current = feignRatesClient.getLatestRates(appId, baseCurrency);
 
         Double prevCoefficient = getCoefficient(prev, currencyCode);
         Double currentCoefficient = getCoefficient(current, currencyCode);
 
-        return Double.compare(currentCoefficient, prevCoefficient);
+        return resolveRateStatus(prevCoefficient, currentCoefficient);
     }
 
     private Double getCoefficient(ExchangeRates rates, String charCode) {
         Map<String, Double> map = rates.getRates();
         Double targetRate = map.get(charCode);
-        Double appBaseRate = map.get(base);
-        Double defaultBaseRate = map.get(rates.getBase());
 
-        return new BigDecimal((defaultBaseRate / appBaseRate) * targetRate)
+        return new BigDecimal(targetRate)
                 .setScale(4, RoundingMode.UP)
                 .doubleValue();
+    }
+
+    private RateStatus resolveRateStatus(Double prevCoefficient, Double currentCoefficient) {
+        return switch (Double.compare(prevCoefficient, currentCoefficient)) {
+            case 1 -> DECREASE;
+            case -1 -> INCREASE;
+            default -> WITHOUT_CHANGES;
+        };
     }
 }

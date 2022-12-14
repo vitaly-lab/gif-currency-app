@@ -1,28 +1,23 @@
 package com.gif.currency.app.service.impl;
 
-import com.gif.currency.app.client.FeignRatesClient;
 import com.gif.currency.app.exception.NotFoundException;
-import org.springframework.beans.factory.annotation.Value;
+import com.gif.currency.app.service.RatesService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Set;
 
 @Service
 public class CurrencyValidator {
-    private final FeignRatesClient feignRatesClient;
-    private final List<String> supportedCurrency;
 
-    @Value("${openexchangerates.app.id}")
-    private String appId;
+    private final Set<String> supportedCurrency;
 
-    public CurrencyValidator(FeignRatesClient feignRatesClient, @Value("${openexchangerates.app.id}") String appId) {
-        this.feignRatesClient = feignRatesClient;
-        this.appId = appId;
-        supportedCurrency = List.copyOf(feignRatesClient.getLatestRates(appId).getRates().keySet());
+    public CurrencyValidator(RatesService ratesService) {
+        this.supportedCurrency = ratesService.getSupportedCurrencyCodes();
+
     }
 
     public void validate(String currencyCode) {
-
+        if (currencyCode == null) throw new NotFoundException("Currency code is not supported by application");
         boolean isSupported = supportedCurrency.contains(currencyCode);
 
         if (!isSupported) {

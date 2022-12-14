@@ -1,10 +1,12 @@
 package com.gif.currency.app.service;
 
-import java.util.List;
+import com.gif.currency.app.model.RateStatus;
+
+import java.util.Set;
 
 public interface RatesService {
 
-    List<String> getCharCodes();
+    Set<String> getSupportedCurrencyCodes();
 
-    int getKey(String currencyCode);
+    RateStatus calculateRateStatus(String currencyCode);
 }

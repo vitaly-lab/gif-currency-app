@@ -12,9 +12,10 @@ import java.time.LocalDate;
 public interface FeignRatesClient {
 
     @GetMapping("/latest.json")
-    ExchangeRates getLatestRates(@RequestParam("app_id") String appId);
+    ExchangeRates getLatestRates(@RequestParam("app_id") String appId, @RequestParam("base") String base);
 
     @GetMapping("/historical/{date}.json")
     ExchangeRates getHistoricalRates(@PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-                                     @RequestParam("app_id") String appId);
+                                     @RequestParam("app_id") String appId,
+                                     @RequestParam("base") String base);
 }

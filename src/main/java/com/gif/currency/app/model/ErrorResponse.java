@@ -1,4 +1,4 @@
-package com.gif.currency.app.exception;
+package com.gif.currency.app.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

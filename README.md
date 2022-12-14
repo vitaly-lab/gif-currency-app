@@ -13,22 +13,22 @@ if lower - with the broken tag.
 ***
 ## Instruction about setting .key
 - set environment variable GIPHY_API_KEY for giphy service
-  https://developers.giphy.com/dashboard/?
+  https://developers.giphy.com/dashboard/
 - set environment variable CURRENCY_API_KEY for giphy service
   https://openexchangerates.org/account/app-ids
 ***
 ## Endpoints
-- `/api/v1/gif/*`  
+- `/api/v1/gif/<currency_code>`  
   Returns a gif depending on the exchange rate:   
   **Parameters**   
-  test: string (GBP)   
+  currency_code: string, currency code in ISO 4217 format  
   **_Example_**   
   `http://localhost:8090/api/v1/gif/GBP`
 ------
 - `/api/v1/currency/codes`  
   Returns a list of currencies that can be used:   
   **_Example_**   
-  `http://localhost:8090/api/v1/currency/codes`
+`http://localhost:8090/api/v1/currency/codes`
 ***
 ## Note
 - API that renders gifs for free for USD base currency only

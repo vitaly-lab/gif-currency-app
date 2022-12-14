@@ -2,92 +2,88 @@ package com.gif.currency.app.service.impl;
 
 import com.gif.currency.app.client.FeignRatesClient;
 import com.gif.currency.app.model.ExchangeRates;
+import com.gif.currency.app.model.RateStatus;
+import com.gif.currency.app.service.RatesService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.Set;
+import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.gif.currency.app.model.RateStatus.DECREASE;
+import static com.gif.currency.app.model.RateStatus.INCREASE;
+import static com.gif.currency.app.model.RateStatus.WITHOUT_CHANGES;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class RatesServiceImplTest {
-
+    private static final String BASE_CURRENCY = "USD";
     @Mock
-    RatesServiceImpl service;
+    FeignRatesClient feignClient;
+
+    RatesService service;
 
     @BeforeEach
     void init() {
-        FeignRatesClient client = mock(FeignRatesClient.class);
-        when(client.getLatestRates(any())).thenReturn(buildLatestExchangeRates());
-        service = new RatesServiceImpl(client);
+        service = new RatesServiceImpl(feignClient, "111", BASE_CURRENCY);
     }
 
     @Test
-    void getCharCodes() {
-        assertEquals(loadCollection(), service.getCharCodes());
+    void shouldReturnCorrectSupportedCurrenciesList() {
+        Set<String> expected = buildCurrencies();
+        ExchangeRates rates = new ExchangeRates(BASE_CURRENCY,
+                Map.of("JPY", 1.0, "GBP", 1.0, "EUR", 1.0));
+        when(feignClient.getLatestRates(any(), eq(BASE_CURRENCY))).thenReturn(rates);
+
+        assertEquals(expected, service.getSupportedCurrencyCodes());
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"EUR"})
-    void getKey(String currencyCode) {
+    @MethodSource("rateStatusCalculationProvider")
+    void shouldCorrectlyResolveRateStatus(String currency,
+                                          ExchangeRates prevExchangeRates,
+                                          ExchangeRates currentExchangeRates,
+                                          RateStatus expectedRateStatus) {
+        when(feignClient.getHistoricalRates(any(), any(), eq(BASE_CURRENCY))).thenReturn(prevExchangeRates);
+        when(feignClient.getLatestRates(any(), eq(BASE_CURRENCY))).thenReturn(currentExchangeRates);
 
-        ExchangeRates prev = buildHistoricalExchangeRates();
-        ExchangeRates current = buildLatestExchangeRates();
-        Double prevCoefficient = getCoefficient(prev, currencyCode);
-        Double currentCoefficient = getCoefficient(current, currencyCode);
+        RateStatus actual = service.calculateRateStatus(currency);
 
-        int x = Double.compare(currentCoefficient, prevCoefficient);
-
-        assertEquals(x, 1);
+        assertEquals(expectedRateStatus, actual);
+        verify(feignClient).getHistoricalRates(eq(LocalDate.now().minusDays(1)), eq("111"), eq(BASE_CURRENCY));
+        verify(feignClient).getLatestRates(any(), eq(BASE_CURRENCY));
     }
 
-    private ExchangeRates buildLatestExchangeRates() {
-        return new ExchangeRates("USD", loadLatestMap());
+    private static Stream<Arguments> rateStatusCalculationProvider() {
+        return buildCurrencies().stream()
+                .flatMap(RatesServiceImplTest::buildExchangeRateArgument);
     }
 
-    private ExchangeRates buildHistoricalExchangeRates() {
-        return new ExchangeRates("USD", loadHistoricalMap());
+    private static Stream<Arguments> buildExchangeRateArgument(String currency) {
+        return Stream.of(
+                Arguments.of(currency, buildExchangeRates(currency, 1.200), buildExchangeRates(currency, 1.52), INCREASE),
+                Arguments.of(currency, buildExchangeRates(currency, 1.54), buildExchangeRates(currency, 1.41), DECREASE),
+                Arguments.of(currency, buildExchangeRates(currency, 1.500), buildExchangeRates(currency, 1.500), WITHOUT_CHANGES)
+        );
     }
 
-    private Map<String, Double> loadLatestMap() {
-        Map<String, Double> mapTest = new TreeMap<>();
-        mapTest.put("EUR", 1.154);
-        mapTest.put("USD", 1.000);
-        return mapTest;
+    private static ExchangeRates buildExchangeRates(String currency, Double value) {
+        return new ExchangeRates("USD", Map.of(currency, value));
     }
 
-    private Map<String, Double> loadHistoricalMap() {
-        Map<String, Double> mapTest = new TreeMap<>();
-        mapTest.put("EUR", 1.022);
-        mapTest.put("USD", 1.000);
-        return mapTest;
-    }
-
-    private List<String> loadCollection() {
-        List<String> listTest = new ArrayList<>();
-        listTest.add("EUR");
-        listTest.add("USD");
-        return listTest;
-    }
-
-    private Double getCoefficient(ExchangeRates rates, String charCode) {
-        Map<String, Double> map = rates.getRates();
-        Double targetRate = map.get(charCode);
-        Double appBaseRate = 1.00;
-        Double defaultBaseRate = map.get(rates.getBase());
-
-        return new BigDecimal((defaultBaseRate / appBaseRate) * targetRate)
-                .setScale(4, RoundingMode.UP)
-                .doubleValue();
+    private static Set<String> buildCurrencies() {
+        return Set.of("JPY", "EUR", "GBP");
     }
 }
